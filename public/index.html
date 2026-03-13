@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIN Share - File Sharing with PIN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #f0f0f0;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-area textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+
+        .message-area textarea:focus {
+            border-color: #764ba2;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #e8eaff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8eaff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .upload-text span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info h4 {
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .file-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #1565c0;
+            margin-bottom: 15px;
+        }
+
+        .pin-display {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .pin-display .pin {
+            font-size: 40px;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 10px;
+        }
+
+        .link-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .link-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .copy-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .supported-files {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>📤 PIN Share</h1>
+            <p>Secure file sharing with 4-digit PIN</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('file')">📁 Share File</button>
+            <button class="tab" onclick="showTab('message')">💬 Share Message/Link</button>
+        </div>
+
+        <div id="fileTab">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">
+                    <span>Click to select file</span> or drag & drop<br>
+                    PDF, JPG, DOC, Excel supported
+                </div>
+            </div>
+
+            <input type="file" id="fileInput">
+
+            <div class="file-info" id="fileInfo">
+                <h4>📄 Selected File</h4>
+                <p id="fileName">filename.pdf</p>
+                <p id="fileSize">Size: 2.5 MB</p>
+            </div>
+
+            <button class="btn btn-primary" id="uploadBtn" disabled onclick="uploadFile()">Upload File</button>
+        </div>
+
+        <div id="messageTab" style="display: none;">
+            <div class="message-area">
+                <textarea id="messageInput" placeholder="Type your message or paste link here...&#10;Example: Join meeting at https://meet.google.com/abc-defg"></textarea>
+            </div>
+            <button class="btn btn-primary" id="shareMsgBtn" onclick="shareMessage()">Share Message</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px;">Uploading file...</p>
+        </div>
+
+        <button class="btn btn-primary" id="uploadBtn" disabled>Upload File</button>
+
+        <div class="result" id="result">
+            <h3>✅ File Uploaded Successfully!</h3>
+            <div class="pin-display">
+                <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Share this PIN with receiver:</p>
+                <div class="pin" id="displayPin">----</div>
+            </div>
+            <div class="link-box">
+                <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Download Link:</p>
+                <input type="text" id="downloadLink" readonly>
+                <button class="copy-btn" onclick="copyLink()">🔗 Copy Link</button>
+            </div>
+
+            <p style="margin-top: 15px; color: #666; font-size: 12px; text-align: center;">
+            <p style="margin-top: 15px; color: #666; font-size: 12px; text-align: center;">
+                ⏰ Link expires in 1 hour
+            </p>
+        </div>
+
+        <div class="supported-files">
+            Supported: PDF, DOC, DOCX, JPG, JPEG, PNG, XLS, XLSX, TXT
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+        let selectedFile = null;
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            if (tabName === 'file') {
+                tabs[0].classList.add('active');
+                document.getElementById('fileTab').style.display = 'block';
+                document.getElementById('messageTab').style.display = 'none';
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('fileTab').style.display = 'none';
+                document.getElementById('messageTab').style.display = 'block';
+            }
+        }
+
+        async function shareMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+            if (!message) {
+                alert('Please enter a message or link');
+                return;
+            }
+
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/share-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                loading.classList.remove('show');
+
+                if (data.success) {
+                    document.getElementById('displayPin').textContent = data.pin;
+                    document.getElementById('downloadLink').value = window.location.origin + data.viewUrl;
+                    result.classList.add('show');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                loading.classList.remove('show');
+                alert('Failed to share message');
+            }
+        }
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File selected
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                showFileInfo();
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                selectedFile = e.dataTransfer.files[0];
+                showFileInfo();
+            }
+        });
+
+        function showFileInfo() {
+            document.getElementById('fileName').textContent = selectedFile.name;
+            document.getElementById('fileSize').textContent = 'Size: ' + formatFileSize(selectedFile.size);
+            fileInfo.classList.add('show');
+            uploadBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Upload file
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            loading.classList.add('show');
+            uploadBtn.disabled = true;
+            result.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('show');
+
+                if (data.success) {
+                    document.getElementById('displayPin').textContent = data.pin;
+                    document.getElementById('downloadLink').value = window.location.origin + data.downloadUrl;
+                    result.classList.add('show');
+                } else {
+                    alert('Upload failed: ' + data.error);
+                    uploadBtn.disabled = false;
+                }
+            } catch (error) {
+                loading.classList.remove('show');
+                alert('Upload failed. Please try again.');
+                uploadBtn.disabled = false;
+            }
+        });
+
+        function copyLink() {
+            const linkInput = document.getElementById('downloadLink');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
