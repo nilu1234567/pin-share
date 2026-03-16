@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIN Share - View Message</title>
+    <title>ShareLink - View Message</title>
     <style>
         * {
             margin: 0;
@@ -27,7 +27,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
         }
 
         .logo {
@@ -48,7 +48,7 @@
 
         .message-box {
             background: #f8f9fa;
-            padding: 25px;
+            padding: 30px;
             border-radius: 15px;
             margin: 20px 0;
             border-left: 5px solid #11998e;
@@ -56,7 +56,7 @@
 
         .message-box p {
             color: #333;
-            font-size: 16px;
+            font-size: 18px;
             word-break: break-word;
             white-space: pre-wrap;
             line-height: 1.6;
@@ -67,25 +67,54 @@
             color: #11998e;
             text-decoration: underline;
             word-break: break-all;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        }
+
+        .copy-btn.copied {
+            background: #4caf50;
         }
 
         .error {
             background: #ffebee;
             color: #c62828;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
         }
 
         .home-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .home-link a {
             color: #11998e;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .home-link a:hover {
@@ -98,10 +127,10 @@
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #11998e;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #11998e;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
@@ -111,43 +140,69 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-box p {
+            color: #1565c0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">
-            <h1>💬 Message</h1>
-            <p>Shared with you via PIN Share</p>
+            <h1>💬 ShareLink</h1>
+            <p>Message shared with you</p>
+        </div>
+
+        <div class="info-box">
+            <p>📩 A message was shared with you</p>
         </div>
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p style="margin-top: 15px;">Loading message...</p>
+            <p style="margin-top: 20px; color: #666;">Loading message...</p>
         </div>
 
         <div id="messageContent" style="display: none;">
             <div class="message-box" id="messageBox"></div>
+            <button class="copy-btn" id="copyBtn" onclick="copyMessage()">
+                📋 Copy Text
+            </button>
             <div class="home-link">
                 <a href="/">← Share something</a>
             </div>
         </div>
 
         <div id="errorMsg" class="error" style="display: none;">
-            <p>❌ Message not found or expired</p>
+            <h3>❌ Message Not Found</h3>
+            <p>The message may have expired or doesn't exist.</p>
+            <div class="home-link" style="margin-top: 20px;">
+                <a href="/">← Go to Home</a>
+            </div>
         </div>
     </div>
 
     <script>
-        const pin = window.location.pathname.split('/').pop();
+        let messageText = '';
+        const messageId = window.location.pathname.split('/').pop();
 
         async function loadMessage() {
             try {
-                const response = await fetch('/api/view/' + pin);
+                const response = await fetch('/api/view/' + messageId);
                 const data = await response.json();
 
                 document.getElementById('loading').style.display = 'none';
 
                 if (data.message) {
+                    messageText = data.message;
                     const messageBox = document.getElementById('messageBox');
                     
                     // Check if message contains a link
@@ -163,6 +218,36 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('errorMsg').style.display = 'block';
             }
+        }
+
+        function copyMessage() {
+            navigator.clipboard.writeText(messageText).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '✓ Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '📋 Copy Text';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = messageText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '✓ Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '📋 Copy Text';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
         }
 
         loadMessage();

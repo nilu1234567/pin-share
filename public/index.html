@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIN Share - File Sharing with PIN</title>
+    <title>ShareLink - Easy File Sharing</title>
     <style>
         * {
             margin: 0;
@@ -27,7 +27,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
         }
 
         .logo {
@@ -188,7 +188,7 @@
             margin-bottom: 15px;
         }
 
-        .pin-display {
+        .id-display {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -196,11 +196,30 @@
             margin-bottom: 15px;
         }
 
-        .pin-display .pin {
-            font-size: 40px;
+        .id-display .id {
+            font-size: 48px;
             font-weight: bold;
             color: #667eea;
             letter-spacing: 10px;
+        }
+
+        .id-display p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .qr-container img {
+            max-width: 200px;
+            border-radius: 10px;
         }
 
         .link-box {
@@ -222,11 +241,13 @@
             background: #4caf50;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
             width: 100%;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .copy-btn:hover {
@@ -273,8 +294,8 @@
 <body>
     <div class="container">
         <div class="logo">
-            <h1>📤 PIN Share</h1>
-            <p>Secure file sharing with 4-digit PIN</p>
+            <h1>🔗 ShareLink</h1>
+            <p>Easy file & message sharing</p>
         </div>
 
         <div class="tabs">
@@ -311,24 +332,27 @@
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="margin-top: 10px;">Uploading file...</p>
+            <p style="margin-top: 10px;">Uploading...</p>
         </div>
 
-        <button class="btn btn-primary" id="uploadBtn" disabled>Upload File</button>
-
         <div class="result" id="result">
-            <h3>✅ File Uploaded Successfully!</h3>
-            <div class="pin-display">
-                <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Share this PIN with receiver:</p>
-                <div class="pin" id="displayPin">----</div>
+            <h3>✅ Shared Successfully!</h3>
+            <div class="id-display">
+                <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Share this ID with receiver:</p>
+                <div class="id" id="displayId">--</div>
+                <p>or share the link below</p>
             </div>
+            
+            <div class="qr-container" id="qrContainer">
+                <img id="qrCode" src="" alt="QR Code">
+            </div>
+            
             <div class="link-box">
-                <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Download Link:</p>
-                <input type="text" id="downloadLink" readonly>
-                <button class="copy-btn" onclick="copyLink()">🔗 Copy Link</button>
+                <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Share Link:</p>
+                <input type="text" id="shareLink" readonly>
+                <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
             </div>
 
-            <p style="margin-top: 15px; color: #666; font-size: 12px; text-align: center;">
             <p style="margin-top: 15px; color: #666; font-size: 12px; text-align: center;">
                 ⏰ Link expires in 1 hour
             </p>
@@ -386,8 +410,13 @@
                 loading.classList.remove('show');
 
                 if (data.success) {
-                    document.getElementById('displayPin').textContent = data.pin;
-                    document.getElementById('downloadLink').value = window.location.origin + data.viewUrl;
+                    document.getElementById('displayId').textContent = data.id;
+                    const shareUrl = window.location.origin + '/view/' + data.id;
+                    document.getElementById('shareLink').value = shareUrl;
+                    
+                    // Generate QR code
+                    generateQRCode(shareUrl);
+                    
                     result.classList.add('show');
                 } else {
                     alert('Error: ' + data.error);
@@ -395,6 +424,18 @@
             } catch (error) {
                 loading.classList.remove('show');
                 alert('Failed to share message');
+            }
+        }
+
+        async function generateQRCode(url) {
+            try {
+                const response = await fetch('/api/qrcode?url=' + encodeURIComponent(url));
+                const data = await response.json();
+                if (data.qrCode) {
+                    document.getElementById('qrCode').src = data.qrCode;
+                }
+            } catch (error) {
+                console.error('Failed to generate QR code:', error);
             }
         }
 
@@ -465,8 +506,13 @@
                 loading.classList.remove('show');
 
                 if (data.success) {
-                    document.getElementById('displayPin').textContent = data.pin;
-                    document.getElementById('downloadLink').value = window.location.origin + data.downloadUrl;
+                    document.getElementById('displayId').textContent = data.id;
+                    const shareUrl = window.location.origin + '/' + data.id;
+                    document.getElementById('shareLink').value = shareUrl;
+                    
+                    // Generate QR code
+                    generateQRCode(shareUrl);
+                    
                     result.classList.add('show');
                 } else {
                     alert('Upload failed: ' + data.error);
@@ -480,7 +526,7 @@
         });
 
         function copyLink() {
-            const linkInput = document.getElementById('downloadLink');
+            const linkInput = document.getElementById('shareLink');
             linkInput.select();
             document.execCommand('copy');
             alert('Link copied to clipboard!');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIN Share - Download File</title>
+    <title>ShareLink - Download File</title>
     <style>
         * {
             margin: 0;
@@ -27,7 +27,8 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
+            text-align: center;
         }
 
         .logo {
@@ -46,149 +47,69 @@
             font-size: 14px;
         }
 
-        .pin-input-container {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .pin-input-container label {
-            display: block;
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .pin-inputs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .pin-input {
-            width: 60px;
-            height: 70px;
-            text-align: center;
-            font-size: 32px;
-            font-weight: bold;
-            border: 3px solid #11998e;
-            border-radius: 10px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .pin-input:focus {
-            border-color: #38ef7d;
-            box-shadow: 0 0 15px rgba(56, 239, 125, 0.3);
-        }
-
-        .pin-input.error {
-            border-color: #f44336;
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .file-preview {
-            display: none;
             margin-top: 30px;
-            padding: 20px;
+            padding: 30px;
             background: #e8f5e9;
             border-radius: 15px;
-            text-align: center;
-        }
-
-        .file-preview.show {
-            display: block;
         }
 
         .file-preview h3 {
             color: #2e7d32;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .file-icon {
-            font-size: 60px;
-            margin-bottom: 15px;
+            font-size: 80px;
+            margin-bottom: 20px;
         }
 
         .file-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            word-break: break-all;
         }
 
         .file-size {
             color: #666;
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .download-btn {
-            background: #4caf50;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
 
         .download-btn:hover {
-            background: #45a049;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
         }
 
         .loading {
-            display: none;
             text-align: center;
-            margin-top: 20px;
-        }
-
-        .loading.show {
-            display: block;
+            padding: 40px;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #11998e;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #11998e;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
@@ -200,216 +121,116 @@
         }
 
         .error-msg {
-            color: #f44336;
-            margin-top: 15px;
+            background: #ffebee;
+            color: #c62828;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            display: none;
         }
 
-        .error-msg.show {
-            display: block;
+        .error-msg h3 {
+            margin-bottom: 10px;
         }
 
         .home-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .home-link a {
             color: #11998e;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .home-link a:hover {
             text-decoration: underline;
         }
 
-        .instructions {
+        .info-box {
             background: #fff3e0;
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 20px;
         }
 
-        .instructions p {
+        .info-box p {
             color: #e65100;
             font-size: 14px;
-            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">
-            <h1>📥 PIN Share</h1>
+            <h1>📥 ShareLink</h1>
             <p>Download your shared file</p>
         </div>
 
-        <div class="instructions">
-            <p>🔐 Enter the 4-digit PIN shared by the sender</p>
-        </div>
-
-        <div class="pin-input-container">
-            <label>Enter 4-digit PIN:</label>
-            <div class="pin-inputs">
-                <input type="text" class="pin-input" maxlength="1" id="pin1" autocomplete="off">
-                <input type="text" class="pin-input" maxlength="1" id="pin2" autocomplete="off">
-                <input type="text" class="pin-input" maxlength="1" id="pin3" autocomplete="off">
-                <input type="text" class="pin-input" maxlength="1" id="pin4" autocomplete="off">
-            </div>
-            <div class="error-msg" id="errorMsg">Invalid PIN or expired link</div>
+        <div class="info-box">
+            <p>📎 File shared via ShareLink</p>
         </div>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="margin-top: 10px;">Verifying PIN...</p>
+            <p style="margin-top: 20px; color: #666;">Loading file...</p>
         </div>
 
-        <button class="btn btn-primary" id="verifyBtn" onclick="verifyPin()">Verify PIN</button>
-
-        <div class="file-preview" id="filePreview">
+        <div class="file-preview" id="filePreview" style="display: none;">
             <div class="file-icon" id="fileIcon">📄</div>
-            <h3>✅ File Found!</h3>
+            <h3>✅ File Ready!</h3>
             <div class="file-name" id="previewFileName">document.pdf</div>
             <div class="file-size" id="previewFileSize">Size: 2.5 MB</div>
-            <button class="download-btn" onclick="downloadFile()">⬇️ Download File</button>
+            <button class="download-btn" onclick="downloadFile()">
+                ⬇️ Download File
+            </button>
+        </div>
+
+        <div class="error-msg" id="errorMsg" style="display: none;">
+            <h3>❌ File Not Found</h3>
+            <p>The file may have expired or doesn't exist.</p>
         </div>
 
         <div class="home-link">
-            <a href="/">← Upload a file</a>
+            <a href="/">← Share a file</a>
         </div>
     </div>
 
     <script>
-        const pinInputs = [
-            document.getElementById('pin1'),
-            document.getElementById('pin2'),
-            document.getElementById('pin3'),
-            document.getElementById('pin4')
-        ];
-        const errorMsg = document.getElementById('errorMsg');
-        const loading = document.getElementById('loading');
-        const filePreview = document.getElementById('filePreview');
-        const verifyBtn = document.getElementById('verifyBtn');
-
-        let currentPin = '';
+        let fileId = '';
         let verifiedFile = null;
 
-        // Get PIN from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlPin = urlParams.get('pin');
+        // Get ID from URL
+        fileId = window.location.pathname.split('/').pop();
 
-        // Auto-fill if PIN in URL
-        if (urlPin && urlPin.length === 4) {
-            const pins = urlPin.split('');
-            pins.forEach((digit, index) => {
-                if (pinInputs[index]) {
-                    pinInputs[index].value = digit;
-                }
-            });
-            currentPin = urlPin;
-            verifyPin();
-        }
-
-        // Handle PIN input
-        pinInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                errorMsg.classList.remove('show');
-                filePreview.classList.remove('show');
-                
-                const value = e.target.value;
-                if (value.length === 1) {
-                    if (index < 3) {
-                        pinInputs[index + 1].focus();
-                    }
-                }
-                updatePin();
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace') {
-                    if (input.value === '' && index > 0) {
-                        pinInputs[index - 1].focus();
-                    }
-                }
-                if (e.key === 'Enter') {
-                    verifyPin();
-                }
-            });
-
-            input.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const pasteData = e.clipboardData.getData('text');
-                const digits = pasteData.replace(/\D/g, '').split('').slice(0, 4);
-                digits.forEach((digit, i) => {
-                    if (pinInputs[i]) {
-                        pinInputs[i].value = digit;
-                    }
-                });
-                updatePin();
-                if (digits.length === 4) {
-                    pinInputs[3].focus();
-                }
-            });
-        });
-
-        function updatePin() {
-            currentPin = pinInputs.map(input => input.value).join('');
-            if (currentPin.length === 4) {
-                verifyBtn.disabled = false;
-            } else {
-                verifyBtn.disabled = true;
-            }
-        }
-
-        async function verifyPin() {
-            if (currentPin.length !== 4) {
-                showError('Please enter 4-digit PIN');
-                return;
-            }
-
-            loading.classList.add('show');
-            errorMsg.classList.remove('show');
-            verifyBtn.disabled = true;
-
+        async function loadFile() {
             try {
                 const response = await fetch('/api/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ pin: currentPin })
+                    body: JSON.stringify({ id: fileId })
                 });
 
                 const data = await response.json();
-                loading.classList.remove('show');
+
+                document.getElementById('loading').style.display = 'none';
 
                 if (data.valid) {
                     verifiedFile = data;
                     document.getElementById('previewFileName').textContent = data.fileName;
                     document.getElementById('previewFileSize').textContent = 'Size: ' + data.fileSize;
                     document.getElementById('fileIcon').textContent = getFileIcon(data.fileName);
-                    filePreview.classList.add('show');
-                    verifyBtn.textContent = '✓ PIN Verified';
+                    document.getElementById('filePreview').style.display = 'block';
                 } else {
-                    showError(data.error || 'Invalid PIN');
-                    pinInputs.forEach(input => {
-                        input.classList.add('error');
-                        setTimeout(() => input.classList.remove('error'), 500);
-                    });
-                    verifyBtn.disabled = false;
+                    document.getElementById('errorMsg').style.display = 'block';
                 }
             } catch (error) {
-                loading.classList.remove('show');
-                showError('Verification failed. Please try again.');
-                verifyBtn.disabled = false;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('errorMsg').style.display = 'block';
             }
-        }
-
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.classList.add('show');
         }
 
         function getFileIcon(filename) {
@@ -430,8 +251,11 @@
         }
 
         function downloadFile() {
-            window.location.href = '/api/download/' + currentPin;
+            window.location.href = '/api/download/' + fileId;
         }
+
+        // Auto-load on page load
+        loadFile();
     </script>
 </body>
 </html>

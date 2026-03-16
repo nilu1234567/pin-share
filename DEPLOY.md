@@ -4,7 +4,7 @@
 
 ### 1. Create GitHub Repository
 1. Go to https://github.com
-2. Create a new repository named "pin-share"
+2. Create a new repository named "pin-share" (or use existing)
 3. Upload all files from this folder to GitHub
 
 ### 2. Deploy to Render
@@ -25,7 +25,10 @@
 ## Features:
 - 📁 Share Files (PDF, DOC, JPG, etc.)
 - 💬 Share Messages/Links
-- 🔐 4-digit PIN protection
+- 🔗 Simple 2-digit ID (e.g., domain.com/34)
+- 📱 QR Code for easy sharing
+- ⬇️ Big Download button
+- 📋 Big Copy Text button
 - ⏰ Auto-delete after 1 hour
 
 ## Cost: FREE

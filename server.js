@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const QRCode = require('qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,9 +38,9 @@ const upload = multer({
 // In-memory storage for file metadata (PIN -> file info)
 const fileStore = new Map();
 
-// Generate random 4-digit PIN
-function generatePIN() {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+// Generate random 2-digit ID (10-99)
+function generateID() {
+    return Math.floor(10 + Math.random() * 90).toString();
 }
 
 // Upload endpoint
@@ -49,7 +50,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        const pin = generatePIN();
+        const id = generateID();
         const fileInfo = {
             originalName: req.file.originalname,
             filename: req.file.filename,
@@ -58,24 +59,24 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
             uploadTime: Date.now()
         };
 
-        fileStore.set(pin, fileInfo);
+        fileStore.set(id, fileInfo);
 
         // Auto-delete after 1 hour
         setTimeout(() => {
-            const file = fileStore.get(pin);
+            const file = fileStore.get(id);
             if (file) {
                 const filePath = path.join(uploadsDir, file.filename);
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
-                fileStore.delete(pin);
+                fileStore.delete(id);
             }
         }, 60 * 60 * 1000); // 1 hour
 
         res.json({
             success: true,
-            pin: pin,
-            downloadUrl: `/download/${pin}`,
+            id: id,
+            downloadUrl: `/download/${id}`,
             fileName: req.file.originalname,
             fileSize: formatFileSize(req.file.size)
         });
@@ -84,15 +85,15 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     }
 });
 
-// Verify PIN endpoint
+// Verify ID endpoint
 app.post('/api/verify', (req, res) => {
-    const { pin } = req.body;
+    const { id } = req.body;
     
-    if (!pin || pin.length !== 4) {
-        return res.status(400).json({ valid: false, error: 'Invalid PIN' });
+    if (!id || id.length !== 2) {
+        return res.status(400).json({ valid: false, error: 'Invalid ID' });
     }
 
-    const fileInfo = fileStore.get(pin);
+    const fileInfo = fileStore.get(id);
     
     if (fileInfo) {
         res.json({
@@ -106,12 +107,12 @@ app.post('/api/verify', (req, res) => {
 });
 
 // Download endpoint
-app.get('/api/download/:pin', (req, res) => {
-    const pin = req.params.pin;
-    const fileInfo = fileStore.get(pin);
+app.get('/api/download/:id', (req, res) => {
+    const id = req.params.id;
+    const fileInfo = fileStore.get(id);
 
     if (!fileInfo) {
-        return res.status(404).send('File not found or PIN expired');
+        return res.status(404).send('File not found or expired');
     }
 
     const filePath = path.join(uploadsDir, fileInfo.filename);
@@ -123,13 +124,25 @@ app.get('/api/download/:pin', (req, res) => {
     res.download(filePath, fileInfo.originalName);
 });
 
-// Download page
-app.get('/download/:pin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'download.html'));
+// Home page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// View message page
-app.get('/view/:pin', (req, res) => {
+// Download page - serves file info and download
+app.get('/:id', (req, res) => {
+    const id = req.params.id;
+    
+    // Check if it's a valid 2-digit ID
+    if (id && /^[0-9]{2}$/.test(id)) {
+        res.sendFile(path.join(__dirname, 'public', 'download.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+});
+
+// View message page (same as download but for messages)
+app.get('/view/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'message.html'));
 });
 
@@ -142,24 +155,24 @@ app.post('/api/share-message', (req, res) => {
             return res.status(400).json({ error: 'No message provided' });
         }
 
-        const pin = generatePIN();
+        const id = generateID();
         const messageInfo = {
             message: message,
             type: 'message',
             uploadTime: Date.now()
         };
 
-        fileStore.set(pin, messageInfo);
+        fileStore.set(id, messageInfo);
 
         // Auto-delete after 1 hour
         setTimeout(() => {
-            fileStore.delete(pin);
+            fileStore.delete(id);
         }, 60 * 60 * 1000);
 
         res.json({
             success: true,
-            pin: pin,
-            viewUrl: `/view/${pin}`
+            id: id,
+            viewUrl: `/view/${id}`
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to share message' });
@@ -167,9 +180,9 @@ app.post('/api/share-message', (req, res) => {
 });
 
 // View message endpoint
-app.get('/api/view/:pin', (req, res) => {
-    const pin = req.params.pin;
-    const info = fileStore.get(pin);
+app.get('/api/view/:id', (req, res) => {
+    const id = req.params.id;
+    const info = fileStore.get(id);
 
     if (!info || info.type !== 'message') {
         return res.status(404).json({ error: 'Message not found or expired' });
@@ -188,6 +201,29 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
+
+// Generate QR code endpoint
+app.get('/api/qrcode', async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url) {
+            return res.status(400).json({ error: 'URL required' });
+        }
+        
+        const qrCodeDataUrl = await QRCode.toDataURL(url, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            }
+        });
+        
+        res.json({ qrCode: qrCodeDataUrl });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to generate QR code' });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
